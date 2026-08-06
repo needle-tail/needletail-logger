@@ -66,7 +66,7 @@ actor LoggerTests {
                     messages.append("\(message)")
 
                     logger.log(level: .error, message: "\(message)")
-                    messages.append("\(message.uppercased())")
+                    messages.append("\(message)")
 
                     logger.log(level: .critical, message: "\(message)")
                     messages.append("\(message)")

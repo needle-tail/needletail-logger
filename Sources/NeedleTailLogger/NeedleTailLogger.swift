@@ -270,7 +270,7 @@ public struct NeedleTailLogger: Sendable {
         let icon: String = {
             switch level {
             case .trace:    return displayIcons ? "🫆 " : ""
-            case .debug:    return displayIcons ? "🪳 " : ""
+            case .debug:    return displayIcons ? "🐛 " : ""
             case .info:     return displayIcons ? "ℹ️ " : ""
             case .notice:   return displayIcons ? "📣 " : ""
             case .warning:  return displayIcons ? "⚠️ " : ""
@@ -278,6 +278,7 @@ public struct NeedleTailLogger: Sendable {
             case .critical: return displayIcons ? "🚨 " : ""
             }
         }()
+        let line = "\(icon)\(formattedMessage)"
 
     #if os(Android)
         // Android priority mapping
@@ -293,40 +294,27 @@ public struct NeedleTailLogger: Sendable {
             }
         }()
 
-        let androidMessage: String = {
-            switch level {
-            case .debug:
-                // Unlike Apple platforms, Android release builds need these lines in logcat for networking/auth diagnosis.
-                return "\(icon)\(formattedMessage)"
-            case .error:
-                return "\(icon)\(formattedMessage.uppercased())"
-            default:
-                return "\(icon)\(formattedMessage)"
-            }
-        }()
-
-        androidLog(priority: priority, message: androidMessage)
+        androidLog(priority: priority, message: line)
 
     #else
         let meta = Logger.Metadata(metadata ?? [:])
-        // Non-Android: use logger methods
+        // Already filtered by `logLevel` above. Same line shape for every level —
+        // no banners and no case-mangling (preserves identifiers / error text).
         switch level {
         case .trace:
-            logger.trace("\(icon)\(formattedMessage)", metadata: meta)
+            logger.trace("\(line)", metadata: meta)
         case .debug:
-            #if DEBUG
-            logger.debug("\n-----------------------------------------\n\(icon)\(formattedMessage)\n-----------------------------------------", metadata: meta)
-            #endif
+            logger.debug("\(line)", metadata: meta)
         case .info:
-            logger.info("\(icon)\(formattedMessage)", metadata: meta)
+            logger.info("\(line)", metadata: meta)
         case .notice:
-            logger.notice("\(icon)\(formattedMessage)", metadata: meta)
+            logger.notice("\(line)", metadata: meta)
         case .warning:
-            logger.warning("\(icon)\(formattedMessage)", metadata: meta)
+            logger.warning("\(line)", metadata: meta)
         case .error:
-            logger.error("\(icon)\(formattedMessage.uppercased())", metadata: meta)
+            logger.error("\(line)", metadata: meta)
         case .critical:
-            logger.critical("\(icon)\(formattedMessage)", metadata: meta)
+            logger.critical("\(line)", metadata: meta)
         }
 
         if writeToFile {
